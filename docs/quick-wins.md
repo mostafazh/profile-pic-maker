@@ -28,9 +28,12 @@ Pulls strategic gap 6 (the safety net) forward for the Twitter path:
 - Non-blocking live smoke against the real `api.fxtwitter.com`, so third-party breakage is caught
   without false-red blocking merges.
 
-### ✅ Self-hosted how-to video — branch `claude/video-how-to-guide-m7r4cw` *(needs a PR opened)*
+### ⚠️ Self-hosted how-to video — branch `claude/video-how-to-guide-m7r4cw` *(needs a one-line fix + a PR)*
 - Embeds `public/how-to-guide.mp4` directly on the page, replacing the Instagram-hosted
   step-by-step link — the item PR #1 deliberately deferred pending a recording.
+- Verified 2026-06-12: merges cleanly with PR #1; video is a proper H.264 faststart MP4
+  (1.4 MB, silent). **But `next build` fails** on one `prettier/prettier` error the edit
+  introduced at `src/app/page.tsx:131` — run `npm run format` on the branch before opening the PR.
 
 ---
 
@@ -71,6 +74,6 @@ extend them with each fix (the e2e answers the `prompt()`, so it changes alongsi
 
 ---
 
-**Sequencing:** merge PRs #1–#2 and open the video-guide PR first; then item 3 (so items 1–2 are
+**Sequencing:** merge PRs #1–#2 and open the video-guide PR (after its prettier fix) first; then item 3 (so items 1–2 are
 provable) → item 1 → item 2 → item 4. Remaining ≈ 3–4 focused days.
 **90-day check:** baseline the funnel, then raise visit→completion conversion by ≥ 15 points over baseline.
