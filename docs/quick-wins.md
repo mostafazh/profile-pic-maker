@@ -114,5 +114,6 @@ against `TechForPalestine:main` from branch `claude/video-how-to-guide-m7r4cw`.
 
 ---
 
-**90-day check:** baseline the funnel, then raise visit→completion conversion by ≥ 15 points
-over baseline.
+**90-day check:** baseline the funnel, then cut visit→completion drop-off by ≥ 20 % from
+baseline (e.g. if 40 % of visitors complete today, drop-off falls 60 % → 48 %, i.e. completion
+rises to 52 %).
