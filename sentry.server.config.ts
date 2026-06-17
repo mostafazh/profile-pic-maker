@@ -7,12 +7,16 @@ import * as Sentry from '@sentry/nextjs';
 Sentry.init({
   dsn: 'https://4a6b1cf4e6a502d96b70523febe8115d@o4509248403931136.ingest.de.sentry.io/4511576394432592',
 
-  // Capture errors only — do not collect personally identifiable information
-  // (no IP addresses, request bodies, cookies, or user identifiers).
-  sendDefaultPii: false,
+  // Do not collect user info. userInfo: false prevents populating user.* fields
+  // (id, email, username, ip_address); httpBodies: [] disables request/response
+  // body capture.
+  dataCollection: {
+    userInfo: false,
+    httpBodies: [],
+  },
 
-  // Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Capture 100% of traces in dev, 10% in production. Adjust for your traffic.
+  tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
 
   // Setting this option to true will print useful information to the console
   // while you're setting up Sentry.
