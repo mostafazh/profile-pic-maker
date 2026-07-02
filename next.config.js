@@ -24,6 +24,23 @@ const nextConfig = {
         hostname: 'cdn.bsky.app',
         pathname: '/img/avatar/plain/**',
       },
+      {
+        // Instagram avatars are proxied through wsrv.nl to add CORS headers.
+        hostname: 'wsrv.nl',
+      },
+      {
+        // Stable Facebook Page picture URL (302s to a fresh signed fbcdn URL).
+        hostname: 'graph.facebook.com',
+        pathname: '/*/picture',
+      },
+      {
+        hostname: 'media.licdn.com',
+        pathname: '/dms/image/**',
+      },
+      {
+        // Fallback avatar resolver for Facebook and LinkedIn.
+        hostname: 'unavatar.io',
+      },
     ],
   },
   // next-on-pages' chunk deduplication aborts with "A duplicated identifier has
