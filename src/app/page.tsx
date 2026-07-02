@@ -8,8 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 import {
   FaArrowRotateLeft,
   FaDownload,
+  FaFacebook,
   FaGithub,
   FaGitlab,
+  FaInstagram,
+  FaLinkedin,
   FaXTwitter,
   FaBluesky,
 } from 'react-icons/fa6';
@@ -78,7 +81,13 @@ export default function Home() {
 
   const handleRetrieveProfilePicture = async (platform: SocialPlatform) => {
     trackEvent(FunnelEvent.SourceSelected, { method: platform });
-    const userProvidedUsername = prompt(`Enter your ${platform} username:`);
+    const promptMessage =
+      platform === SocialPlatform.Facebook
+        ? 'Enter your facebook Page username (personal profiles are not supported):'
+        : platform === SocialPlatform.Linkedin
+          ? 'Enter your linkedin username (or paste your profile URL):'
+          : `Enter your ${platform} username:`;
+    const userProvidedUsername = prompt(promptMessage);
 
     if (userProvidedUsername) {
       trackEvent(FunnelEvent.PhotoProvided, { method: platform });
@@ -86,7 +95,7 @@ export default function Home() {
       try {
         setLoader(true);
         const response = await fetch(
-          `/api/retrieve-profile-pic?username=${userProvidedUsername}&platform=${platform}`,
+          `/api/retrieve-profile-pic?username=${encodeURIComponent(userProvidedUsername)}&platform=${platform}`,
         ).then((res) => (res.ok ? res.json() : null));
         setLoader(false);
         if (response === null) {
@@ -291,6 +300,30 @@ export default function Home() {
                 className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
               >
                 Use <FaBluesky className="inline mb-1" /> Profile Pic
+              </button>
+              <button
+                onClick={async () =>
+                  await handleRetrieveProfilePicture(SocialPlatform.Instagram)
+                }
+                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+              >
+                Use <FaInstagram className="inline mb-1" /> Profile Pic
+              </button>
+              <button
+                onClick={async () =>
+                  await handleRetrieveProfilePicture(SocialPlatform.Facebook)
+                }
+                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+              >
+                Use <FaFacebook className="inline mb-1" /> Profile Pic
+              </button>
+              <button
+                onClick={async () =>
+                  await handleRetrieveProfilePicture(SocialPlatform.Linkedin)
+                }
+                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+              >
+                Use <FaLinkedin className="inline mb-1" /> Profile Pic
               </button>
             </>
           )}
