@@ -34,12 +34,18 @@ const nextConfig = {
         pathname: '/*/picture',
       },
       {
-        hostname: 'media.licdn.com',
-        pathname: '/dms/image/**',
+        // Fallback avatar resolver for Facebook.
+        hostname: 'unavatar.io',
       },
       {
-        // Fallback avatar resolver for Facebook and LinkedIn.
-        hostname: 'unavatar.io',
+        // TikTok avatars (signed CDN URLs, regional hosts).
+        hostname: '*.tiktokcdn.com',
+      },
+      {
+        hostname: '*.tiktokcdn-eu.com',
+      },
+      {
+        hostname: '*.tiktokcdn-us.com',
       },
     ],
   },

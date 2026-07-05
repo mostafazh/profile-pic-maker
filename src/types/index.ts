@@ -5,5 +5,5 @@ export enum SocialPlatform {
   Bluesky = 'bluesky',
   Instagram = 'instagram',
   Facebook = 'facebook',
-  Linkedin = 'linkedin',
+  Tiktok = 'tiktok',
 }

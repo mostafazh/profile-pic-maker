@@ -29,6 +29,12 @@ export const FunnelEvent = {
   Downloaded: 'Funnel: 6 Downloaded',
   // Not a funnel step: user resets to pick a different photo.
   StartOver: 'Start Over',
+  // Not a funnel step: fetching/showing the chosen photo failed. Always
+  // carries the source. Props: method (the source — platform or user-upload)
+  // and error (machine-readable code): profile_pic_not_found / invalid_platform
+  // from the API, http_<status> / network_error when the request itself
+  // failed, or image_load_failed when the returned URL wouldn't render.
+  PhotoFetchFailed: 'Photo Fetch Failed',
 } as const;
 
 export type FunnelEventName = (typeof FunnelEvent)[keyof typeof FunnelEvent];

@@ -53,6 +53,20 @@ If you already have Node.js 22 and git installed:
 3. Install dependencies: `npm ci`
 4. Run the project: `npm run dev`
 
+### Optional environment variables
+
+All optional — every feature degrades gracefully when unset. Configure them in
+Cloudflare Pages → Settings → Environment variables for deployments.
+
+| Variable | Purpose |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | Enables the [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) fallback: when direct Instagram/Facebook/TikTok fetches are blocked, the page is rendered in Cloudflare's managed headless Chrome and the avatar is read from its markup. Free tier: 10 browser-minutes/day. |
+| `BROWSER_RENDERING_API_TOKEN` | API token for the above, created with the "Browser Rendering – Edit" permission ([docs](https://developers.cloudflare.com/browser-rendering/rest-api/)). |
+
+Server-side error reporting goes through the project's Sentry setup
+(`sentry.*.config.ts`), which already has the DSN configured — no env var
+needed.
+
 ## Testing
 
 | Command | What it runs |

@@ -12,9 +12,10 @@ import {
   FaGithub,
   FaGitlab,
   FaInstagram,
-  FaLinkedin,
+  FaThreads,
   FaXTwitter,
   FaBluesky,
+  FaTiktok,
 } from 'react-icons/fa6';
 
 export default function Home() {
@@ -92,8 +93,8 @@ export default function Home() {
     const promptMessage =
       platform === SocialPlatform.Facebook
         ? 'Enter your facebook Page username (personal profiles are not supported):'
-        : platform === SocialPlatform.Linkedin
-          ? 'Enter your linkedin username (or paste your profile URL):'
+        : platform === SocialPlatform.Instagram
+          ? 'Enter your Instagram / Threads username:'
           : `Enter your ${platform} username:`;
     const userProvidedUsername = prompt(promptMessage);
 
@@ -104,16 +105,27 @@ export default function Home() {
         setLoader(true);
         const response = await fetch(
           `/api/retrieve-profile-pic?username=${encodeURIComponent(userProvidedUsername)}&platform=${platform}`,
-        ).then((res) => (res.ok ? res.json() : null));
+        );
         setLoader(false);
-        if (response === null) {
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          trackEvent(FunnelEvent.PhotoFetchFailed, {
+            method: platform,
+            error: body?.error ?? `http_${response.status}`,
+          });
           alert(
             'Error fetching your profile picture. Please make sure that you entered a correct username.',
           );
           return;
         }
-        setUserImageUrl(response.profilePicUrl);
+        const { profilePicUrl } = await response.json();
+        setUserImageUrl(profilePicUrl);
       } catch (error) {
+        setLoader(false);
+        trackEvent(FunnelEvent.PhotoFetchFailed, {
+          method: platform,
+          error: 'network_error',
+        });
         console.error('Error fetching profile picture:', error);
       }
     }
@@ -224,11 +236,27 @@ export default function Home() {
                   id="userImage"
                   alt="profile-image"
                   src={userImageUrl ?? '/user.jpg'}
+                  // Avatar hosts vary per platform/CDN region and the image
+                  // is consumed raw by the canvas export anyway — skip the
+                  // optimizer so an unlisted host can't crash the page.
+                  unoptimized
                   onLoad={() => {
                     // Only the user's selected photo counts, not the placeholder.
                     if (userImageUrl) {
                       trackEvent(FunnelEvent.PreviewShown, {
                         method: filePostfix ?? 'unknown',
+                      });
+                    }
+                  }}
+                  onError={() => {
+                    // The API returned a URL but the browser couldn't render
+                    // it (expired signed URL, broken proxy, CORS). Track it as
+                    // a fetch failure, attributed to the same source, so it
+                    // shows up alongside API errors in the analytics.
+                    if (userImageUrl) {
+                      trackEvent(FunnelEvent.PhotoFetchFailed, {
+                        method: filePostfix ?? 'unknown',
+                        error: 'image_load_failed',
                       });
                     }
                   }}
@@ -321,7 +349,8 @@ export default function Home() {
                 }
                 className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
               >
-                Use <FaInstagram className="inline mb-1" /> Profile Pic
+                Use <FaInstagram className="inline mb-1" />
+                <FaThreads className="inline mb-1 ml-1" /> Profile Pic
               </button>
               <button
                 onClick={async () =>
@@ -333,11 +362,11 @@ export default function Home() {
               </button>
               <button
                 onClick={async () =>
-                  await handleRetrieveProfilePicture(SocialPlatform.Linkedin)
+                  await handleRetrieveProfilePicture(SocialPlatform.Tiktok)
                 }
                 className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
               >
-                Use <FaLinkedin className="inline mb-1" /> Profile Pic
+                Use <FaTiktok className="inline mb-1" /> Profile Pic
               </button>
             </>
           )}
