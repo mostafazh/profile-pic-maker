@@ -1,5 +1,7 @@
 'use client';
-import { FunnelEvent, trackEvent } from '@/lib/analytics';
+import { getAssignments } from '@/lib/ab';
+import { FunnelEvent, setExperimentProps, trackEvent } from '@/lib/analytics';
+import { SOCIAL_BUTTONS_EXPERIMENT_ID, toEventProps } from '@/lib/experiments';
 import { SocialPlatform } from '@/types';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
@@ -27,8 +29,17 @@ export default function Home() {
   const [filePostfix, setFilePostfix] = useState<
     SocialPlatform | 'user-upload'
   >();
+  // Experiment assignments keyed by experiment id ({} until resolved on mount).
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const inSocialButtonsTreatment =
+    assignments[SOCIAL_BUTTONS_EXPERIMENT_ID] === 'treatment';
 
   useEffect(() => {
+    // Resolve experiment variants and register them BEFORE the first event, so
+    // Landed (and every later funnel event) is tagged for segmentation.
+    const resolved = getAssignments();
+    setExperimentProps(toEventProps(resolved));
+    setAssignments(resolved);
     trackEvent(FunnelEvent.Landed);
   }, []);
 
@@ -103,8 +114,15 @@ export default function Home() {
       setFilePostfix(platform);
       try {
         setLoader(true);
+        // Forward the visitor's experiment assignments (namespaced exp_* params)
+        // so server-side events (e.g. Sentry) can be attributed per experiment.
+        const params = new URLSearchParams({
+          username: userProvidedUsername,
+          platform,
+          ...toEventProps(assignments),
+        });
         const response = await fetch(
-          `/api/retrieve-profile-pic?username=${encodeURIComponent(userProvidedUsername)}&platform=${platform}`,
+          `/api/retrieve-profile-pic?${params.toString()}`,
         );
         setLoader(false);
         if (!response.ok) {
@@ -343,31 +361,41 @@ export default function Home() {
               >
                 Use <FaBluesky className="inline mb-1" /> Profile Pic
               </button>
-              <button
-                onClick={async () =>
-                  await handleRetrieveProfilePicture(SocialPlatform.Instagram)
-                }
-                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
-              >
-                Use <FaInstagram className="inline mb-1" />
-                <FaThreads className="inline mb-1 ml-1" /> Profile Pic
-              </button>
-              <button
-                onClick={async () =>
-                  await handleRetrieveProfilePicture(SocialPlatform.Facebook)
-                }
-                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
-              >
-                Use <FaFacebook className="inline mb-1" /> Profile Pic
-              </button>
-              <button
-                onClick={async () =>
-                  await handleRetrieveProfilePicture(SocialPlatform.Tiktok)
-                }
-                className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
-              >
-                Use <FaTiktok className="inline mb-1" /> Profile Pic
-              </button>
+              {/* Experiment (social-buttons-v1): only the treatment arm sees
+                  the newly added social platforms. */}
+              {inSocialButtonsTreatment && (
+                <>
+                  <button
+                    onClick={async () =>
+                      await handleRetrieveProfilePicture(
+                        SocialPlatform.Instagram,
+                      )
+                    }
+                    className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+                  >
+                    Use <FaInstagram className="inline mb-1" />
+                    <FaThreads className="inline mb-1 ml-1" /> Profile Pic
+                  </button>
+                  <button
+                    onClick={async () =>
+                      await handleRetrieveProfilePicture(
+                        SocialPlatform.Facebook,
+                      )
+                    }
+                    className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+                  >
+                    Use <FaFacebook className="inline mb-1" /> Profile Pic
+                  </button>
+                  <button
+                    onClick={async () =>
+                      await handleRetrieveProfilePicture(SocialPlatform.Tiktok)
+                    }
+                    className="rounded-full my-2 py-3 px-2 w-full border border-gray-900 text-xl"
+                  >
+                    Use <FaTiktok className="inline mb-1" /> Profile Pic
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>

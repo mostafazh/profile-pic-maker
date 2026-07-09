@@ -39,13 +39,31 @@ export const FunnelEvent = {
 
 export type FunnelEventName = (typeof FunnelEvent)[keyof typeof FunnelEvent];
 
+let experimentProps: Record<string, string> = {};
+
+/**
+ * Register the current visitor's experiment assignments, already keyed by each
+ * experiment's namespaced propKey (see src/lib/experiments.ts `toEventProps`).
+ * Once set, every subsequent trackEvent call carries them, so any funnel event
+ * can be segmented by experiment in Plausible without mixing experiments' data.
+ * Call once, before the first tracked event.
+ */
+export function setExperimentProps(props: Record<string, string>) {
+  experimentProps = props;
+}
+
 /**
  * Safely fire a Plausible custom event. No-ops during SSR or if the
- * Plausible script hasn't loaded yet.
+ * Plausible script hasn't loaded yet. Any registered experiment props are
+ * merged in automatically (an event's own props win on key clashes).
  */
 export function trackEvent(event: FunnelEventName, props?: PlausibleProps) {
   if (typeof window === 'undefined' || typeof window.plausible !== 'function') {
     return;
   }
-  window.plausible(event, props ? { props } : undefined);
+  const merged: PlausibleProps = { ...experimentProps, ...props };
+  window.plausible(
+    event,
+    Object.keys(merged).length > 0 ? { props: merged } : undefined,
+  );
 }

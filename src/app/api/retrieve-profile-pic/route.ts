@@ -1,13 +1,30 @@
 import { renderPageHtml } from '@/lib/browser-render';
+import { EXPERIMENT_PROP_PREFIX } from '@/lib/experiments';
 import { reportServerError } from '@/lib/sentry';
 import { SocialPlatform } from '@/types';
 import { NextResponse, type NextRequest } from 'next/server';
+
+// Generic seam: collect any namespaced experiment params the client forwarded
+// (exp_*) so server-side events can be attributed per experiment. Adding a new
+// experiment needs no change here — the prefix convention covers all of them.
+const collectExperimentParams = (
+  searchParams: URLSearchParams,
+): Record<string, string> => {
+  const params: Record<string, string> = {};
+  searchParams.forEach((value, key) => {
+    if (key.startsWith(EXPERIMENT_PROP_PREFIX)) {
+      params[key] = value;
+    }
+  });
+  return params;
+};
 
 export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const username = searchParams.get('username');
   const platform = searchParams.get('platform') as SocialPlatform;
+  const experimentParams = collectExperimentParams(searchParams);
 
   let profilePicUrl: string | null = null;
 
@@ -21,6 +38,7 @@ export async function GET(request: NextRequest) {
     // it instead of masking it with the default image.
     const error = !username ? 'missing_username' : 'invalid_platform';
     await reportServerError(`retrieve-profile-pic: ${error}`, {
+      ...experimentParams,
       platform: platform ?? '',
       usernameProvided: String(Boolean(username)),
     });
@@ -56,6 +74,7 @@ export async function GET(request: NextRequest) {
     // Sentry (which sources fail most), matching the client-side Plausible
     // breakdown. Expected for wrong/private usernames, so keep it low-signal.
     await reportServerError('retrieve-profile-pic: profile_pic_not_found', {
+      ...experimentParams,
       platform,
     });
     return NextResponse.json(
