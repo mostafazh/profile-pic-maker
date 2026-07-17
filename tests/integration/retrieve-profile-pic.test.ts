@@ -111,25 +111,26 @@ describe.each(CASES)(
 );
 
 describe('GET /api/retrieve-profile-pic (bad input)', () => {
-  it('returns the default image without calling upstream when username is missing', async () => {
+  it('returns 400 without calling upstream when username is missing', async () => {
     const fetchMock = mockFetch(() => ({ ok: true, json: async () => ({}) }));
 
     const res = await GET(new NextRequest(`${ROUTE}?platform=twitter`));
 
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ profilePicUrl: '/user.jpg' });
+    // Reported instead of masked with the default image.
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'missing_username' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('returns the default image without calling upstream for an unknown platform', async () => {
+  it('returns 400 without calling upstream for an unknown platform', async () => {
     const fetchMock = mockFetch(() => ({ ok: true, json: async () => ({}) }));
 
     const res = await GET(
       new NextRequest(`${ROUTE}?username=someone&platform=myspace`),
     );
 
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ profilePicUrl: '/user.jpg' });
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'invalid_platform' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
