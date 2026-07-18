@@ -39,6 +39,10 @@ export default function Home() {
     // Landed (and every later funnel event) is tagged for segmentation.
     const resolved = getAssignments();
     setExperimentProps(toEventProps(resolved));
+    // Deliberate: assignments come from localStorage, which is client-only, so
+    // this must run after mount (a lazy useState initializer would run during
+    // SSR and cause a hydration mismatch). The extra render is expected.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAssignments(resolved);
     trackEvent(FunnelEvent.Landed);
   }, []);
